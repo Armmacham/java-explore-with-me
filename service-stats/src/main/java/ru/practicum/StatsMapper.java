@@ -9,7 +9,7 @@ import ru.practicum.dao.StatsEntity;
 @Component
 public class StatsMapper {
 
-    public ViewStatsResponseDto toViewStatsResponseDto(StatHitCount statHitCount){
+    public ViewStatsResponseDto toViewStatsResponseDto(StatHitCount statHitCount) {
         return new ViewStatsResponseDto(
                 statHitCount.getUrl(),
                 statHitCount.getApp(),
