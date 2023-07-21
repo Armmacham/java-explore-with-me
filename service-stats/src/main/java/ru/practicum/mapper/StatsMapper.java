@@ -1,4 +1,4 @@
-package ru.practicum;
+package ru.practicum.mapper;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.controller.dto.HitRequestDto;
@@ -21,7 +21,7 @@ public class StatsMapper {
         return new StatsEntity(
                 null,
                 hitRequestDto.getApp(),
-                hitRequestDto.getUrl(),
+                hitRequestDto.getUri(),
                 hitRequestDto.getIp(),
                 hitRequestDto.getTimestamp(),
                 null
