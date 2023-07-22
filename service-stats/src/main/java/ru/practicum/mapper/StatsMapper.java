@@ -11,7 +11,7 @@ public class StatsMapper {
 
     public ViewStatsResponseDto toViewStatsResponseDto(StatHitCount statHitCount) {
         return new ViewStatsResponseDto(
-                statHitCount.getUrl(),
+                statHitCount.getUri(),
                 statHitCount.getApp(),
                 statHitCount.getHits()
         );

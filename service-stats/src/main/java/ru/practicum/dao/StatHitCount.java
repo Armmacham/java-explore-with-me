@@ -4,12 +4,12 @@ import lombok.Getter;
 
 @Getter
 public class StatHitCount {
-    private String url;
+    private String uri;
     private String app;
     private Long hits;
 
-    public StatHitCount(String url, String app, Long hits) {
-        this.url = url;
+    public StatHitCount(String uri, String app, Long hits) {
+        this.uri = uri;
         this.app = app;
         this.hits = hits;
     }
