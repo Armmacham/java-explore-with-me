@@ -8,11 +8,13 @@ services:
       - stats-db
     ports:
       - "9090:9090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
 
   stats-db:
     image: postgres:14-alpine
-    ports:
-      - "6541:5432"
     environment:
       - POSTGRES_DB=ewm-stats
       - POSTGRES_USER=root
