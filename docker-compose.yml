@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   stats-server:
-    build: service-stats
+    build: service-stats/service-stats-server
     image: service_stats_image
     container_name: service_stats_container
     depends_on:
