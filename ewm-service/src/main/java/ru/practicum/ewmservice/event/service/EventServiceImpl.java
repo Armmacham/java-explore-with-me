@@ -270,7 +270,7 @@ public class EventServiceImpl implements EventService {
 
     private Map<Long, Long> findEventIdConfirmedCount(List<Long> eventIds) {
         Collection<EventWithRequestNum> resultConfirmedReq = eventRepository
-                .getConfirmedRequestMap(eventIds, RequestState.CONFIRMED.toString());
+                .getConfirmedRequestMap(eventIds, RequestState.CONFIRMED);
 
         return resultConfirmedReq
                 .stream()

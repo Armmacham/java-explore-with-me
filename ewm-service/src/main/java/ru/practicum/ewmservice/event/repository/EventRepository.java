@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.ewmservice.event.controller.dto.EventWithRequestNum;
 import ru.practicum.ewmservice.event.dao.EventEntity;
+import ru.practicum.ewmservice.state.RequestState;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ public interface EventRepository extends CrudRepository<EventEntity, Long> {
             "FROM RequestEntity r " +
             "WHERE r.event.id IN :events AND r.status = :status " +
             "GROUP BY r.event.id")
-    List<EventWithRequestNum> getConfirmedRequestMap(@Param("events") List<Long> events, @Param("status") String status);
+    List<EventWithRequestNum> getConfirmedRequestMap(@Param("events") List<Long> events, @Param("status") RequestState status);
 
     List<EventEntity> getEventsByIdIn(List<Long> ids);
 }
