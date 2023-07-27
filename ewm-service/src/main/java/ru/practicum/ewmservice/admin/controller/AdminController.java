@@ -69,14 +69,14 @@ public class AdminController {
 
     @PatchMapping("/events/{eventId}")
     public EventFullDto changeEvent(@PathVariable Long eventId,
-                                    @RequestBody UpdateEventAdminRequest updateEventAdminRequest) {
+                                    @RequestBody @Valid UpdateEventAdminRequest updateEventAdminRequest) {
 
         return adminService.changeEvent(eventId, updateEventAdminRequest);
     }
 
     @PatchMapping("/compilations/{id}")
     public CompilationDto updateCompilation(@PathVariable Long id,
-                                            @RequestBody UpdateCompilationRequest compilationRequest) {
+                                            @RequestBody @Valid UpdateCompilationRequest compilationRequest) {
         return adminService.updateCompilation(id, compilationRequest);
     }
 

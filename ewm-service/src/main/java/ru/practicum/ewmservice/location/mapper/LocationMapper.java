@@ -8,7 +8,7 @@ import ru.practicum.ewmservice.location.dao.LocationEntity;
 public class LocationMapper {
 
     public LocationEntity toEntity(LocationDto locationDto) {
-        return new LocationEntity(null, locationDto.getLon(), locationDto.getLat());
+        return new LocationEntity(null, locationDto.getLat(), locationDto.getLon());
     }
 
 }

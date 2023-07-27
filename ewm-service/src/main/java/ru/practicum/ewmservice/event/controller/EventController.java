@@ -24,7 +24,7 @@ public class EventController {
     private final EventService eventService;
     private final HttpServletRequest request;
 
-    @GetMapping()
+    @GetMapping
     public Collection<EventShortDto> findPublicEventsWithParameters(
             @RequestParam(value = "text", required = false) String text,
             @RequestParam(value = "categories", required = false) List<Long> categories,

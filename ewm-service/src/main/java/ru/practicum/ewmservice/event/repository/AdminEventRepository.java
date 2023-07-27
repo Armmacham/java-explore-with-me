@@ -73,7 +73,7 @@ public class AdminEventRepository {
             Predicate inCategories = event.get("category").in(categories);
             criteria = builder.and(criteria, inCategories);
         }
-        if (!text.isEmpty()) {
+        if (text != null && !text.isEmpty()) {
             Predicate annotation = builder.like(builder.lower(event.get("annotation")),
                     "%" + text.toLowerCase() + "%");
             Predicate description = builder.like(builder.lower(event.get("description")),
