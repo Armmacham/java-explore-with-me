@@ -2,7 +2,6 @@ package ru.practicum.ewmservice.category.controller.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
