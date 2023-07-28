@@ -3,8 +3,8 @@ package ru.practicum.ewmservice.admin.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.category.controller.dto.AddCategoryRequestDto;
 import ru.practicum.ewmservice.category.controller.dto.CategoryDto;
 import ru.practicum.ewmservice.category.dao.CategoryEntity;
@@ -21,6 +21,7 @@ import ru.practicum.ewmservice.event.controller.dto.NewEventDto;
 import ru.practicum.ewmservice.event.dao.EventEntity;
 import ru.practicum.ewmservice.event.mapper.EventMapper;
 import ru.practicum.ewmservice.event.service.EventService;
+import ru.practicum.ewmservice.exception.BadRequestException;
 import ru.practicum.ewmservice.exception.InvalidStateException;
 import ru.practicum.ewmservice.location.service.LocationService;
 import ru.practicum.ewmservice.state.ActionState;
@@ -79,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
             throw new InvalidStateException("unable to change event status");
         }
         if (updateEventAdminRequest.getEventDate() != null && updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now())) {
-            throw new InvalidStateException("unable to change event status, event already started");
+            throw new BadRequestException("unable to change event status, event already started");
         }
         if (oldEvent.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new InvalidStateException("unable to change event, date should be 1 hour later");
@@ -139,18 +140,33 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private EventEntity update(EventEntity event, UpdateEventAdminRequest updateEvent) {
-        if (event.getCategory() != null) {
+        if (updateEvent.getCategory() != null) {
             CategoryEntity newCategory = categoryMapper.toEntity(categoryService.getById(updateEvent.getCategory()));
             event.setCategory(newCategory);
         }
-        if (event.getLocation() != null) {
+        if (updateEvent.getLocation() != null) {
             locationService.delete(event.getLocation());
             event.setLocation(locationService.save(updateEvent.getLocation()));
+        }
+        if (updateEvent.getParticipantLimit() == null) {
+            updateEvent.setParticipantLimit(event.getParticipantLimit());
+        }
+        if (updateEvent.getPaid() == null) {
+            updateEvent.setPaid(event.isPaid());
+        }
+        if (updateEvent.getRequestModeration() == null) {
+            updateEvent.setRequestModeration(event.isRequestModeration());
         }
 
         NewEventDto eventDto = eventMapper.toUpdateDto(updateEvent);
         EventEntity resultEvent = eventMapper.toEntity(event.getInitiator(), event.getCategory(),
                 event.getLocation(), eventDto);
+
+        if (resultEvent.getParticipantLimit() == null) resultEvent.setParticipantLimit(event.getParticipantLimit());
+        if (resultEvent.getAnnotation() == null) resultEvent.setAnnotation(event.getAnnotation());
+        if (resultEvent.getDescription() == null) resultEvent.setDescription(event.getDescription());
+        if (resultEvent.getTitle() == null) resultEvent.setTitle(event.getTitle());
+        if (resultEvent.getEventDate() == null) resultEvent.setEventDate(event.getEventDate());
 
         if (ActionState.PUBLISH_EVENT.equals(updateEvent.getStateAction())) {
             resultEvent.setState(State.PUBLISHED);

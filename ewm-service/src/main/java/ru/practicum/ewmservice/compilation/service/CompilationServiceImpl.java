@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dao.CompilationEntity;
 import ru.practicum.ewmservice.compilation.mapper.CompilationMapper;
@@ -55,7 +55,7 @@ public class CompilationServiceImpl implements CompilationService {
             log.info("Подборки с id {} не найдено", id);
             throw new EntityNotFoundException("compilation with id=" + id + " not found");
         }
-        if (compilationRequest.getEvents().size() != 0) {
+        if (compilationRequest.getEvents() != null && !compilationRequest.getEvents().isEmpty()) {
             compilation.setEvents(eventService.getEventListByEventIds(compilationRequest.getEvents()));
         }
         if (compilationRequest.getTitle() != null) {

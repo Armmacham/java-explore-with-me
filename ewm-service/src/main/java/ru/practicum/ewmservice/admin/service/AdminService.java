@@ -1,7 +1,7 @@
 package ru.practicum.ewmservice.admin.service;
 
-import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.category.controller.dto.AddCategoryRequestDto;
 import ru.practicum.ewmservice.category.controller.dto.CategoryDto;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;

@@ -2,7 +2,7 @@ package ru.practicum.ewmservice.event.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.category.dao.CategoryEntity;
 import ru.practicum.ewmservice.category.mapper.CategoryMapper;
 import ru.practicum.ewmservice.event.controller.dto.EventFullDto;
@@ -60,7 +60,7 @@ public class EventMapper {
         event.setInitiator(user);
         event.setParticipantLimit(newEventDto.getParticipantLimit());
         event.setLocation(location);
-        event.setRequestModeration(newEventDto.isRequestModeration());
+        event.setRequestModeration(newEventDto.getRequestModeration() == null || newEventDto.getRequestModeration());
         event.setTitle(newEventDto.getTitle());
         event.setPaid(newEventDto.isPaid());
         return event;
@@ -77,11 +77,11 @@ public class EventMapper {
         NewEventDto newEventDto = new NewEventDto();
         newEventDto.setAnnotation(updateEvent.getAnnotation());
         newEventDto.setDescription(updateEvent.getDescription());
-        newEventDto.setPaid(updateEvent.isPaid());
+        newEventDto.setPaid(updateEvent.getPaid());
         newEventDto.setLocation(updateEvent.getLocation());
         newEventDto.setCategory(updateEvent.getCategory());
-        newEventDto.setParticipantLimit(updateEvent.getParticipantLimit());
-        newEventDto.setRequestModeration(updateEvent.isRequestModeration());
+        newEventDto.setParticipantLimit(updateEvent.getParticipantLimit() == null ? 0 : updateEvent.getParticipantLimit());
+        newEventDto.setRequestModeration(updateEvent.getRequestModeration());
         newEventDto.setTitle(updateEvent.getTitle());
         newEventDto.setEventDate(updateEvent.getEventDate());
         return newEventDto;

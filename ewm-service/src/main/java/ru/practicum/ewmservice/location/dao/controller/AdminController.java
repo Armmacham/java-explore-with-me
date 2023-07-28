@@ -1,4 +1,4 @@
-package ru.practicum.ewmservice.admin.controller;
+package ru.practicum.ewmservice.location.dao.controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.location.dao.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.admin.service.AdminService;
 import ru.practicum.ewmservice.category.controller.dto.AddCategoryRequestDto;
 import ru.practicum.ewmservice.category.controller.dto.CategoryDto;
@@ -82,7 +82,7 @@ public class AdminController {
 
     @GetMapping("/users")
     public List<UserDto> getAllUsers(
-            @RequestParam(value = "ids") List<Long> ids,
+            @RequestParam(value = "ids", required = false) List<Long> ids,
             @Min(0) @RequestParam(value = "from", required = false, defaultValue = "0") int from,
             @Min(1) @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
         return adminService.getAllUsers(ids, from, size);

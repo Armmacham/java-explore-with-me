@@ -15,6 +15,7 @@ import ru.practicum.ewmservice.event.dao.EventEntity;
 import ru.practicum.ewmservice.event.mapper.EventMapper;
 import ru.practicum.ewmservice.event.repository.AdminEventRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
+import ru.practicum.ewmservice.exception.BadRequestException;
 import ru.practicum.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.ewmservice.exception.InvalidStateException;
 import ru.practicum.ewmservice.location.dao.LocationEntity;
@@ -60,7 +61,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto createEvent(Long userId, NewEventDto eventDto) {
         UserEntity user = userService.getById(userId);
         if (eventDto.getEventDate() != null && eventDto.getEventDate().isBefore(LocalDateTime.now())) {
-            throw new InvalidStateException("invalid event date");
+            throw new BadRequestException("invalid event date");
         }
         EventEntity event = eventMapper.toEntity(
                 user,
@@ -68,11 +69,15 @@ public class EventServiceImpl implements EventService {
                 locationService.save(eventDto.getLocation()),
                 eventDto);
         event.setState(State.PENDING);
-        return eventMapper.toEventFullDto(eventRepository.save(event), 0L, 0L);
+        EventEntity saved = eventRepository.save(event);
+        return eventMapper.toEventFullDto(saved, 0L, 0L);
     }
 
     @Override
     public List<EventEntity> getEventListByEventIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
         return eventRepository.getEventsByIdIn(ids);
     }
 
@@ -96,7 +101,7 @@ public class EventServiceImpl implements EventService {
         statsClient.hit(new HitRequestDto(app, "/events/" + id, ip, LocalDateTime.now()));
 
         if (!event.getState().equals(State.PUBLISHED)) {
-            throw new InvalidStateException("event not in published state");
+            throw new EntityNotFoundException("event not in published state");
         }
 
         return getEventFullDto(event.getId(), event, List.of(event.getId()));
@@ -113,7 +118,7 @@ public class EventServiceImpl implements EventService {
             throw new InvalidStateException("cannot change event, incorrect date");
         }
         if (eventUserRequest.getEventDate() != null && eventUserRequest.getEventDate().isBefore(LocalDateTime.now())) {
-            throw new InvalidStateException("cannot change event, incorrect date");
+            throw new BadRequestException("cannot change event, incorrect date");
         }
         if (event.getState().equals(State.PUBLISHED)) {
             throw new InvalidStateException("cannot change event, its already published");
@@ -178,6 +183,7 @@ public class EventServiceImpl implements EventService {
                                                               Boolean paid, String rangeStart, String rangeEnd,
                                                               Boolean onlyAvailable, SortState sort, int from,
                                                               int size, String ip) {
+        checkRanges(rangeStart, rangeEnd);
 
         statsClient.hit(new HitRequestDto(app, "/events", ip, LocalDateTime.now()));
 
@@ -197,12 +203,20 @@ public class EventServiceImpl implements EventService {
         return eventsShortDto;
     }
 
+    private void checkRanges(String rangeStart, String rangeEnd) {
+        if (rangeStart != null && rangeEnd != null) {
+            if (LocalDateTime.from(dateTimeFormatter.parse(rangeStart)).isAfter(LocalDateTime.from(dateTimeFormatter.parse(rangeEnd)))) {
+                throw new BadRequestException("invalid time range");
+            }
+        }
+    }
+
 
     private EventFullDto setNewParamsForEvent(EventEntity event, UpdateEventUserRequest eventUserRequest) {
         Map<Long, Long> viewsMap = getViews(List.of(event), List.of("/events/" + event.getId()));
         Map<Long, Long> confirmedRequestMap = findEventIdConfirmedCount(List.of(event.getId()));
 
-        if (eventUserRequest.getStateAction().equals(NewEventState.CANCEL_REVIEW)) {
+        if (NewEventState.CANCEL_REVIEW.equals(eventUserRequest.getStateAction())) {
             event.setState(State.CANCELED);
             EventEntity resultEvent = eventRepository.save(event);
             return eventMapper.toEventFullDto(resultEvent,
@@ -278,10 +292,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private Map<Long, Long> getViews(List<EventEntity> events, List<String> uris) {
-        LocalDateTime startTime = getStartTimeForStatistic(events).minusMinutes(1);
+        LocalDateTime startTime = getStartTimeForStatistic(events).minusMinutes(10);
         Map<Long, Long> resultViewsMap = new HashMap<>();
         Collection<ViewStatsResponseDto> stats = statsClient.showStats(startTime, LocalDateTime.now().plusMinutes(1)
-                .truncatedTo(ChronoUnit.SECONDS), uris, false);
+                .truncatedTo(ChronoUnit.SECONDS), uris, true);
         stats.forEach(statsOutputDto -> resultViewsMap.put(
                 Long.parseLong(Arrays.stream(statsOutputDto.getUri().split("/")).collect(Collectors.toList()).get(2)),
                 statsOutputDto.getHits()));
@@ -298,7 +312,7 @@ public class EventServiceImpl implements EventService {
             }
         });
         if (timePublishedEvent.size() == 0) {
-            return LocalDateTime.now().minusMinutes(1).truncatedTo(ChronoUnit.SECONDS);
+            return LocalDateTime.now().minusMinutes(10).truncatedTo(ChronoUnit.SECONDS);
         }
         finalTimePublishedEvent = timePublishedEvent.stream().sorted(Comparator
                 .comparing(LocalDateTime::getDayOfYear).reversed()).collect(Collectors.toList());

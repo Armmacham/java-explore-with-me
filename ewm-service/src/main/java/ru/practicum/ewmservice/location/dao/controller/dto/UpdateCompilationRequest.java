@@ -1,10 +1,10 @@
-package ru.practicum.ewmservice.admin.controller.dto;
+package ru.practicum.ewmservice.location.dao.controller.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Max;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
@@ -13,6 +13,6 @@ import java.util.List;
 public class UpdateCompilationRequest {
     private List<Long> events;
     private Boolean pinned;
-    @Max(50)
+    @Size(max = 50)
     private String title;
 }

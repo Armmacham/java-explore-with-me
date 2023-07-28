@@ -1,19 +1,25 @@
 package ru.practicum.ewmservice.user.controller.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewUserRequest {
     @NotNull
+    @NotBlank
+    @Size(min = 2, max = 250)
     String name;
     @NotNull
+    @NotBlank
+    @Email
+    @Size(min = 6, max = 254)
     String email;
 }

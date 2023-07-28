@@ -94,8 +94,8 @@ public class RequestServiceImpl implements RequestService {
             throw new InvalidStateException("user " + userId + " is not initiator");
         }
 
-        Integer confirmedReqNow = requestRepository.getConfirmedRequest(eventId, RequestState.CONFIRMED);
-        if (confirmedReqNow.equals(event.getParticipantLimit())) {
+        int confirmedReqNow = requestRepository.getConfirmedRequest(eventId, RequestState.CONFIRMED);
+        if (event.getParticipantLimit() == confirmedReqNow) {
             throw new InvalidStateException("requests limit");
         }
 
@@ -105,9 +105,11 @@ public class RequestServiceImpl implements RequestService {
                 .stream()
                 .filter(e -> !RequestState.PENDING.equals(e.getStatus()))
                 .findAny()
-                .orElseThrow(() -> new InvalidStateException("invalid request status"));
+                .ifPresent(s -> {
+                    throw new IllegalStateException("illegal state in request");
+                });
 
-        if (requests.getStatus().equals(RequestState.REJECTED)) {
+        if (RequestState.REJECTED.equals(requests.getStatus())) {
             return rejectAll(allRequests);
         }
 
@@ -126,7 +128,8 @@ public class RequestServiceImpl implements RequestService {
         if (State.CANCELED.equals(event.getState()) || State.PENDING.equals(event.getState())) {
             throw new InvalidStateException("event in invalid status");
         }
-        if (event.getParticipantLimit() <= requestRepository.getConfirmedRequest(event.getId(), RequestState.CONFIRMED)) {
+        if (event.getParticipantLimit() != 0 &&
+                event.getParticipantLimit() <= requestRepository.getConfirmedRequest(event.getId(), RequestState.CONFIRMED)) {
             throw new InvalidStateException("participants limit");
         }
     }

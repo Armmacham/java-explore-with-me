@@ -1,4 +1,4 @@
-package ru.practicum.ewmservice.admin.controller.dto;
+package ru.practicum.ewmservice.location.dao.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -27,9 +27,9 @@ public class UpdateEventAdminRequest {
 
     private LocationDto location;
 
-    private boolean paid;
+    private Boolean paid;
     private Integer participantLimit;
-    private boolean requestModeration;
+    private Boolean requestModeration;
     private ActionState stateAction;
 
     @Size(min = 3, max = 120)

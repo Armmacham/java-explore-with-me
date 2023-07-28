@@ -31,6 +31,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUserWithPagination(List<Long> ids, int from, int size) {
         log.info("get all users where id in {} from {} size {}", ids, from, size);
+        if (ids == null || ids.isEmpty()) {
+            return userRepository.findAll(PageRequest.of(from / size, size))
+                    .stream()
+                    .map(userMapper::toDto)
+                    .collect(Collectors.toList());
+        }
         return userRepository.findAllByIdIn(ids, PageRequest.of(from / size, size))
                 .stream()
                 .map(userMapper::toDto)
