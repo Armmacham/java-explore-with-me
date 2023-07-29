@@ -1,5 +1,6 @@
 package ru.practicum.ewmservice.exception;
 
+import org.apache.coyote.Response;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,5 +17,12 @@ public class ControllerAdvice {
         return new ResponseEntity<>(
                 new ExceptionDto(ex.getMessage(), ex.getCause().getMessage(), HttpStatus.CONFLICT.name(), LocalDateTime.now()
         ), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler
+    private ResponseEntity<ExceptionDto> handleException(Exception ex) {
+        return new ResponseEntity<>(
+                new ExceptionDto(ex.getMessage(), ex.getCause().getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.name(), LocalDateTime.now()
+                ), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
