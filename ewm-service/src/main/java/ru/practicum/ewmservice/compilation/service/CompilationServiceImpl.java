@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dao.CompilationEntity;
 import ru.practicum.ewmservice.compilation.mapper.CompilationMapper;

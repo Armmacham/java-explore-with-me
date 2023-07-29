@@ -1,7 +1,7 @@
 package ru.practicum.ewmservice.compilation.service;
 
 
-import ru.practicum.ewmservice.location.dao.controller.dto.UpdateCompilationRequest;
+import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;
 
 import java.util.List;

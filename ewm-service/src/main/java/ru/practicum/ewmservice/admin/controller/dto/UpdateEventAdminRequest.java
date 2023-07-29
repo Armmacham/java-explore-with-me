@@ -1,4 +1,4 @@
-package ru.practicum.ewmservice.location.dao.controller.dto;
+package ru.practicum.ewmservice.admin.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

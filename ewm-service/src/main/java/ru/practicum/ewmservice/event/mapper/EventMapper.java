@@ -2,7 +2,7 @@ package ru.practicum.ewmservice.event.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewmservice.location.dao.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.admin.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.category.dao.CategoryEntity;
 import ru.practicum.ewmservice.category.mapper.CategoryMapper;
 import ru.practicum.ewmservice.event.controller.dto.EventFullDto;
