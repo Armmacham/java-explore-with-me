@@ -4,15 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewmservice.admin.controller.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;
+import ru.practicum.ewmservice.compilation.controller.dto.NewCompilationDto;
+import ru.practicum.ewmservice.compilation.controller.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.dao.CompilationEntity;
 import ru.practicum.ewmservice.compilation.mapper.CompilationMapper;
 import ru.practicum.ewmservice.compilation.repository.CompilationRepository;
+import ru.practicum.ewmservice.event.dao.EventEntity;
 import ru.practicum.ewmservice.event.service.EventService;
 import ru.practicum.ewmservice.exception.EntityNotFoundException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -37,14 +40,30 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public List<CompilationDto> getCompilation(boolean pinned, int from, int size) {
-        return compilationRepository
-                .getCompilationsByPinned(pinned, PageRequest.of(from / size, size))
+        List<CompilationEntity> compilations = compilationRepository
+                .getCompilationsByPinned(pinned, PageRequest.of(from / size, size)).stream().collect(Collectors.toList());
+
+        Map<Long, Long> views = eventService.getViews(
+                compilations.stream()
+                        .flatMap(e -> e.getEvents().stream())
+                        .collect(Collectors.toList()),
+                compilations.stream()
+                        .flatMap(e -> e.getEvents().stream())
+                        .map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
+
+        Map<Long, Long> eventIdConfirmedCount = eventService.findEventIdConfirmedCount(
+                compilations.stream()
+                        .flatMap(e -> e.getEvents().stream())
+                        .map(EventEntity::getId)
+                        .collect(Collectors.toList()));
+
+        return compilations
                 .stream()
                 .map(compilation ->
                         compilationMapper
                                 .toCompilationDto(
                                         compilation,
-                                        eventService.getEventShortListWithSort(compilation.getEvents(), false)))
+                                        eventService.getEventShortListWithSort(compilation.getEvents(), false, views, eventIdConfirmedCount)))
                 .collect(Collectors.toList());
     }
 
@@ -75,5 +94,15 @@ public class CompilationServiceImpl implements CompilationService {
         CompilationEntity compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("compilation with id=" + id + " not found"));
         compilationRepository.delete(compilation);
+    }
+
+    @Override
+    public CompilationDto createNewCompilation(NewCompilationDto newCompilationDto) {
+        List<EventEntity> events = eventService.getEventListByEventIds(newCompilationDto.getEvents());
+        CompilationEntity compilationEntity = compilationMapper.toCompilation(newCompilationDto, events);
+        CompilationEntity compilationEntityResult = compilationRepository.save(compilationEntity);
+
+        return compilationMapper.toCompilationDto(compilationEntityResult,
+                eventService.getEventShortListWithSort(compilationEntityResult.getEvents(), false));
     }
 }

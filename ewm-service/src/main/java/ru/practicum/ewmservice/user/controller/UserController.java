@@ -31,8 +31,8 @@ public class UserController {
     @GetMapping("/{userId}/events")
     public Collection<EventShortDto> findEventsByCurrentUser(
             @PathVariable Long userId,
-            @Min(0) @RequestParam(value = "from", defaultValue = "0", required = false) int from,
-            @Min(1) @RequestParam(value = "size", defaultValue = "10", required = false) int size) {
+            @Min(0) @RequestParam(value = "from", defaultValue = "0") int from,
+            @Min(1) @RequestParam(value = "size", defaultValue = "10") int size) {
         return eventService.findEventsByCurrentUser(userId, from, size);
     }
 

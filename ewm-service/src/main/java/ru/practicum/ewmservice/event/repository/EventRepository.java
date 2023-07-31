@@ -5,14 +5,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import ru.practicum.ewmservice.event.controller.dto.EventWithRequestNum;
 import ru.practicum.ewmservice.event.dao.EventEntity;
 import ru.practicum.ewmservice.state.RequestState;
 
 import java.util.List;
 
-@Repository
+
 public interface EventRepository extends CrudRepository<EventEntity, Long> {
 
     @Query("SELECT DISTINCT e FROM EventEntity e WHERE e.initiator.id = :userId")

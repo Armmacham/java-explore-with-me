@@ -31,7 +31,7 @@ public class EventController {
             @RequestParam(value = "paid", required = false) Boolean paid,
             @RequestParam(value = "rangeStart", required = false) String rangeStart,
             @RequestParam(value = "rangeEnd", required = false) String rangeEnd,
-            @RequestParam(value = "onlyAvailable", required = false, defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(value = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(value = "sort", defaultValue = "EVENT_DATE") SortState sort,
             @Min(0) @RequestParam(value = "from", defaultValue = "0") int from,
             @Min(1) @RequestParam(value = "size", defaultValue = "10") int size) {

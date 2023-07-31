@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewmservice.event.controller.dto.EventFilterDto;
+import ru.practicum.ewmservice.event.controller.dto.UpdateEventAdminRequest;
+import ru.practicum.ewmservice.category.dao.CategoryEntity;
 import ru.practicum.ewmservice.category.mapper.CategoryMapper;
 import ru.practicum.ewmservice.category.service.CategoryService;
 import ru.practicum.ewmservice.event.controller.dto.EventFullDto;
@@ -20,6 +23,7 @@ import ru.practicum.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.ewmservice.exception.InvalidStateException;
 import ru.practicum.ewmservice.location.dao.LocationEntity;
 import ru.practicum.ewmservice.location.service.LocationService;
+import ru.practicum.ewmservice.state.ActionState;
 import ru.practicum.ewmservice.state.NewEventState;
 import ru.practicum.ewmservice.state.RequestState;
 import ru.practicum.ewmservice.state.SortState;
@@ -203,6 +207,78 @@ public class EventServiceImpl implements EventService {
         return eventsShortDto;
     }
 
+    @Override
+    public Collection<EventFullDto> findEvents(EventFilterDto eventFilterDto) {
+        LocalDateTime startFormat = null;
+        LocalDateTime endFormat = null;
+
+        if (eventFilterDto.getRangeStart() != null) {
+            startFormat = LocalDateTime.parse(eventFilterDto.getRangeStart(), dateTimeFormatter);
+        }
+        if (eventFilterDto.getRangeEnd() != null) {
+            endFormat = LocalDateTime.parse(eventFilterDto.getRangeEnd(), dateTimeFormatter);
+        }
+
+        return findEventsWithParameters(
+                eventFilterDto.getUsers(), eventFilterDto.getStates(), eventFilterDto.getCategories(), startFormat, endFormat, eventFilterDto.getFrom(), eventFilterDto.getSize());
+    }
+
+    @Override
+    public EventFullDto changeEvent(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
+        EventEntity oldEvent = getById(eventId);
+        if (oldEvent.getState() != State.PENDING) {
+            throw new InvalidStateException("unable to change event status");
+        }
+        if (updateEventAdminRequest.getEventDate() != null && updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("unable to change event status, event already started");
+        }
+        if (oldEvent.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new InvalidStateException("unable to change event, date should be 1 hour later");
+        }
+        EventEntity resultEvent = update(oldEvent, updateEventAdminRequest);
+        resultEvent.setId(eventId);
+
+        return saveChangeEventForAdmin(resultEvent);
+    }
+
+    private EventEntity update(EventEntity event, UpdateEventAdminRequest updateEvent) {
+        if (updateEvent.getCategory() != null) {
+            CategoryEntity newCategory = categoryMapper.toEntity(categoryService.getById(updateEvent.getCategory()));
+            event.setCategory(newCategory);
+        }
+        if (updateEvent.getLocation() != null) {
+            locationService.delete(event.getLocation());
+            event.setLocation(locationService.save(updateEvent.getLocation()));
+        }
+        if (updateEvent.getParticipantLimit() == null) {
+            updateEvent.setParticipantLimit(event.getParticipantLimit());
+        }
+        if (updateEvent.getPaid() == null) {
+            updateEvent.setPaid(event.isPaid());
+        }
+        if (updateEvent.getRequestModeration() == null) {
+            updateEvent.setRequestModeration(event.isRequestModeration());
+        }
+
+        NewEventDto eventDto = eventMapper.toUpdateDto(updateEvent);
+        EventEntity resultEvent = eventMapper.toEntity(event.getInitiator(), event.getCategory(),
+                event.getLocation(), eventDto);
+
+        if (resultEvent.getParticipantLimit() == null) resultEvent.setParticipantLimit(event.getParticipantLimit());
+        if (resultEvent.getAnnotation() == null) resultEvent.setAnnotation(event.getAnnotation());
+        if (resultEvent.getDescription() == null) resultEvent.setDescription(event.getDescription());
+        if (resultEvent.getTitle() == null) resultEvent.setTitle(event.getTitle());
+        if (resultEvent.getEventDate() == null) resultEvent.setEventDate(event.getEventDate());
+
+        if (ActionState.PUBLISH_EVENT.equals(updateEvent.getStateAction())) {
+            resultEvent.setState(State.PUBLISHED);
+            resultEvent.setPublishedOn(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        } else {
+            resultEvent.setState(State.CANCELED);
+        }
+        return resultEvent;
+    }
+
     private void checkRanges(String rangeStart, String rangeEnd) {
         if (rangeStart != null && rangeEnd != null) {
             if (LocalDateTime.from(dateTimeFormatter.parse(rangeStart)).isAfter(LocalDateTime.from(dateTimeFormatter.parse(rangeEnd)))) {
@@ -269,6 +345,11 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> viewsMap = getViews(events, events.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
         Map<Long, Long> confirmedRequestMap = findEventIdConfirmedCount(events.stream().map(EventEntity::getId).collect(Collectors.toList()));
 
+        return getEventShortListWithSort(events, onlyAvailable, viewsMap, confirmedRequestMap);
+    }
+
+    @Override
+    public List<EventShortDto> getEventShortListWithSort(List<EventEntity> events, Boolean onlyAvailable, Map<Long, Long> viewsMap, Map<Long, Long> confirmedRequestMap) {
         if (onlyAvailable) {
             return events
                     .stream()
@@ -282,7 +363,8 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-    private Map<Long, Long> findEventIdConfirmedCount(List<Long> eventIds) {
+    @Override
+    public Map<Long, Long> findEventIdConfirmedCount(List<Long> eventIds) {
         Collection<EventWithRequestNum> resultConfirmedReq = eventRepository
                 .getConfirmedRequestMap(eventIds, RequestState.CONFIRMED);
 
@@ -291,7 +373,8 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toMap(EventWithRequestNum::getEventId, EventWithRequestNum::getConfirmedRequestSize));
     }
 
-    private Map<Long, Long> getViews(List<EventEntity> events, List<String> uris) {
+    @Override
+    public Map<Long, Long> getViews(List<EventEntity> events, List<String> uris) {
         LocalDateTime startTime = getStartTimeForStatistic(events).minusMinutes(10);
         Map<Long, Long> resultViewsMap = new HashMap<>();
         Collection<ViewStatsResponseDto> stats = statsClient.showStats(startTime, LocalDateTime.now().plusMinutes(1)

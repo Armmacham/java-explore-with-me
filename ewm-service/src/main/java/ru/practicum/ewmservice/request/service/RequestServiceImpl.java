@@ -135,32 +135,25 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private EventRequestStatusUpdateResult rejectAll(List<RequestEntity> allRequests) {
-        allRequests.forEach(request -> {
-            request.setStatus(RequestState.REJECTED);
-            requestRepository.save(request);
-        });
+        allRequests.forEach(request -> request.setStatus(RequestState.REJECTED));
+        requestRepository.saveAll(allRequests);
         return eventMapper.toEventRequestStatusUpdateResult(new ArrayList<>(), allRequests);
     }
 
-    private EventRequestStatusUpdateResult confirmOrRejectRequests(Integer confirmed,
-                                                                   List<RequestEntity> requests,
-                                                                   EventEntity event) {
+    private EventRequestStatusUpdateResult confirmOrRejectRequests(
+            Integer confirmed, List<RequestEntity> requests, EventEntity event) {
         List<RequestEntity> accepted = requests
                 .stream()
                 .limit(event.getParticipantLimit() - confirmed)
-                .map(r -> {
-                    r.setStatus(RequestState.CONFIRMED);
-                    return requestRepository.save(r);
-                })
+                .peek(r -> r.setStatus(RequestState.CONFIRMED))
                 .collect(Collectors.toList());
+        requestRepository.saveAll(accepted);
 
         List<RequestEntity> rejected = requests
                 .stream()
                 .skip(accepted.size())
-                .map(r -> {
-                    r.setStatus(RequestState.REJECTED);
-                    return requestRepository.save(r);
-                }).collect(Collectors.toList());
+                .peek(r -> r.setStatus(RequestState.REJECTED)).collect(Collectors.toList());
+        requestRepository.saveAll(rejected);
 
         return eventMapper.toEventRequestStatusUpdateResult(accepted, rejected);
     }

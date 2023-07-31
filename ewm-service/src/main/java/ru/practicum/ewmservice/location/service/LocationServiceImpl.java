@@ -19,7 +19,8 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public LocationEntity save(LocationDto locationDto) {
         log.info("save location {}", locationDto);
-        return locationRepository.save(locationMapper.toEntity(locationDto));
+        return locationRepository.findByLatIsAndLonIs(locationDto.getLat(), locationDto.getLon())
+                .orElse(locationRepository.save(locationMapper.toEntity(locationDto)));
     }
 
     @Override
