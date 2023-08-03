@@ -11,6 +11,7 @@ import ru.practicum.ewmservice.rating.controller.dto.RatingDto;
 public class LikeMapper {
 
     private final EventMapper eventMapper;
+
     public RatingDto toDto(EventLikeCount eventLikeCount) {
         return new RatingDto(
                 eventMapper.toEventShortDto(eventLikeCount.getEvent(), null, null),
