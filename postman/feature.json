@@ -19,7 +19,9 @@
               "    try {\r",
               "        const user = await api.addUser(rnd.getUser());\r",
               "        const category = await api.addCategory(rnd.getCategory());\r",
-              "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+              "        let eventBody = rnd.getEvent(category.id);\r",
+              "        eventBody['requestModeration'] = false;\r",
+              "        let event = await api.addEvent(user.id, eventBody);\r",
               "        pm.collectionVariables.set(\"eventId\", event.id)\r",
               "        event = await api.publishEvent(event.id);\r",
               "\r",
@@ -73,6 +75,85 @@
           "path": [
             "rating",
             "like",
+            "event",
+            "{{eventId}}",
+            "user",
+            "{{userId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Dislike Event",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const main = async () => {\r",
+              "    const api = new API(pm);\r",
+              "    const rnd = new RandomUtils();\r",
+              "\r",
+              "    try {\r",
+              "        const user = await api.addUser(rnd.getUser());\r",
+              "        const category = await api.addCategory(rnd.getCategory());\r",
+              "        let eventBody = rnd.getEvent(category.id);\r",
+              "        eventBody['requestModeration'] = false;\r",
+              "        let event = await api.addEvent(user.id, eventBody);\r",
+              "        pm.collectionVariables.set(\"eventId\", event.id)\r",
+              "        event = await api.publishEvent(event.id);\r",
+              "\r",
+              "        const submittedUser1 = await api.addUser(rnd.getUser());\r",
+              "        pm.collectionVariables.set(\"userId\", submittedUser1.id)\r",
+              "        await api.publishParticipationRequest(event.id, submittedUser1.id);\r",
+              "    } catch(err) {\r",
+              "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+              "    }\r",
+              "};\r",
+              "\r",
+              "const interval = setInterval(() => {}, 1000);\r",
+              "\r",
+              "setTimeout(async () => \r",
+              "    {\r",
+              "        try {\r",
+              "            // выполняем наш скрипт\r",
+              "            await main();\r",
+              "        } catch (e) {\r",
+              "            console.error(e);\r",
+              "        } finally {\r",
+              "            clearInterval(interval);\r",
+              "        }\r",
+              "    },  \r",
+              "    100 \r",
+              ");"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rating/dislike/event/{{eventId}}/user/{{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rating",
+            "dislike",
             "event",
             "{{eventId}}",
             "user",
@@ -149,83 +230,6 @@
           "path": [
             "rating",
             "like",
-            "event",
-            "{{eventId}}",
-            "user",
-            "{{userId}}"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Dislike Event",
-      "event": [
-        {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const main = async () => {\r",
-              "    const api = new API(pm);\r",
-              "    const rnd = new RandomUtils();\r",
-              "\r",
-              "    try {\r",
-              "        const user = await api.addUser(rnd.getUser());\r",
-              "        const category = await api.addCategory(rnd.getCategory());\r",
-              "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-              "        pm.collectionVariables.set(\"eventId\", event.id)\r",
-              "        event = await api.publishEvent(event.id);\r",
-              "\r",
-              "        const submittedUser1 = await api.addUser(rnd.getUser());\r",
-              "        pm.collectionVariables.set(\"userId\", submittedUser1.id)\r",
-              "        await api.publishParticipationRequest(event.id, submittedUser1.id);\r",
-              "    } catch(err) {\r",
-              "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-              "    }\r",
-              "};\r",
-              "\r",
-              "const interval = setInterval(() => {}, 1000);\r",
-              "\r",
-              "setTimeout(async () => \r",
-              "    {\r",
-              "        try {\r",
-              "            // выполняем наш скрипт\r",
-              "            await main();\r",
-              "        } catch (e) {\r",
-              "            console.error(e);\r",
-              "        } finally {\r",
-              "            clearInterval(interval);\r",
-              "        }\r",
-              "    },  \r",
-              "    100 \r",
-              ");"
-            ],
-            "type": "text/javascript"
-          }
-        },
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Ответ должен содержать код статуса 201\", function () {\r",
-              "    pm.response.to.have.status(201);\r",
-              "});"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/rating/dislike/event/{{eventId}}/user/{{userId}}",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "rating",
-            "dislike",
             "event",
             "{{eventId}}",
             "user",
@@ -477,14 +481,16 @@
               "    try {\r",
               "        const user = await api.addUser(rnd.getUser());\r",
               "        const category = await api.addCategory(rnd.getCategory());\r",
-              "        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+              "        let eventBody = rnd.getEvent(category.id);\r",
+              "        eventBody['requestModeration'] = false;\r",
+              "        let event = await api.addEvent(user.id, eventBody);\r",
               "        pm.collectionVariables.set(\"eventId\", event.id)\r",
               "        event = await api.publishEvent(event.id);\r",
               "\r",
               "        const submittedUser1 = await api.addUser(rnd.getUser());\r",
               "        pm.collectionVariables.set(\"userId\", submittedUser1.id)\r",
               "        await api.publishParticipationRequest(event.id, submittedUser1.id);\r",
-              "        await api.likeEvent(submittedUser1.id, event.id);\r",
+              "        api.likeEvent(submittedUser1.id, event.id);\r",
               "    } catch(err) {\r",
               "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
               "    }\r",
@@ -532,6 +538,164 @@
           "path": [
             "rating",
             "events"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like event with incorrect user",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const main = async () => {\r",
+              "    const api = new API(pm);\r",
+              "    const rnd = new RandomUtils();\r",
+              "\r",
+              "    try {\r",
+              "        const user = await api.addUser(rnd.getUser());\r",
+              "        const category = await api.addCategory(rnd.getCategory());\r",
+              "        let eventBody = rnd.getEvent(category.id);\r",
+              "        eventBody['requestModeration'] = false;\r",
+              "        let event = await api.addEvent(user.id, eventBody);\r",
+              "        pm.collectionVariables.set(\"eventId\", event.id)\r",
+              "        event = await api.publishEvent(event.id);\r",
+              "\r",
+              "        const submittedUser1 = await api.addUser(rnd.getUser());\r",
+              "        pm.collectionVariables.set(\"userId\", submittedUser1.id)\r",
+              "        await api.publishParticipationRequest(event.id, submittedUser1.id);\r",
+              "    } catch(err) {\r",
+              "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+              "    }\r",
+              "};\r",
+              "\r",
+              "const interval = setInterval(() => {}, 1000);\r",
+              "\r",
+              "setTimeout(async () => \r",
+              "    {\r",
+              "        try {\r",
+              "            // выполняем наш скрипт\r",
+              "            await main();\r",
+              "        } catch (e) {\r",
+              "            console.error(e);\r",
+              "        } finally {\r",
+              "            clearInterval(interval);\r",
+              "        }\r",
+              "    },  \r",
+              "    100 \r",
+              ");"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rating/like/event/{{eventId}}/user/9999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rating",
+            "like",
+            "event",
+            "{{eventId}}",
+            "user",
+            "9999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like event with incorrect eventId",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const main = async () => {\r",
+              "    const api = new API(pm);\r",
+              "    const rnd = new RandomUtils();\r",
+              "\r",
+              "    try {\r",
+              "        const user = await api.addUser(rnd.getUser());\r",
+              "        const category = await api.addCategory(rnd.getCategory());\r",
+              "        let eventBody = rnd.getEvent(category.id);\r",
+              "        eventBody['requestModeration'] = false;\r",
+              "        let event = await api.addEvent(user.id, eventBody);\r",
+              "        pm.collectionVariables.set(\"eventId\", event.id)\r",
+              "        event = await api.publishEvent(event.id);\r",
+              "\r",
+              "        const submittedUser1 = await api.addUser(rnd.getUser());\r",
+              "        pm.collectionVariables.set(\"userId\", submittedUser1.id)\r",
+              "        await api.publishParticipationRequest(event.id, submittedUser1.id);\r",
+              "    } catch(err) {\r",
+              "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+              "    }\r",
+              "};\r",
+              "\r",
+              "const interval = setInterval(() => {}, 1000);\r",
+              "\r",
+              "setTimeout(async () => \r",
+              "    {\r",
+              "        try {\r",
+              "            // выполняем наш скрипт\r",
+              "            await main();\r",
+              "        } catch (e) {\r",
+              "            console.error(e);\r",
+              "        } finally {\r",
+              "            clearInterval(interval);\r",
+              "        }\r",
+              "    },  \r",
+              "    100 \r",
+              ");"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rating/like/event/9999/user/{{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rating",
+            "like",
+            "event",
+            "9999",
+            "user",
+            "{{userId}}"
           ]
         }
       },
