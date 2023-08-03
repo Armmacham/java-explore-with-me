@@ -135,7 +135,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private EventRequestStatusUpdateResult rejectAll(List<RequestEntity> allRequests) {
-        allRequests.forEach(request -> request.setStatus(RequestState.REJECTED));
+        allRequests.forEach(request -> {
+            request.setStatus(RequestState.REJECTED);
+        });
         requestRepository.saveAll(allRequests);
         return eventMapper.toEventRequestStatusUpdateResult(new ArrayList<>(), allRequests);
     }
