@@ -24,14 +24,14 @@ public class RatingController {
 
     @ResponseStatus(value = HttpStatus.CREATED)
     @PutMapping("/like/event/{eventId}/user/{userId}")
-    public void likeEvent(@PathVariable Long eventId, @PathVariable Long userId) {
-        ratingService.addReactionOnEvent(eventId, userId, true);
+    public RatingDto likeEvent(@PathVariable Long eventId, @PathVariable Long userId) {
+        return ratingService.addReactionOnEvent(eventId, userId, true);
     }
 
     @ResponseStatus(value = HttpStatus.CREATED)
     @PutMapping("/dislike/event/{eventId}/user/{userId}")
-    public void dislikeEvent(@PathVariable Long eventId, @PathVariable Long userId) {
-        ratingService.addReactionOnEvent(eventId, userId, false);
+    public RatingDto dislikeEvent(@PathVariable Long eventId, @PathVariable Long userId) {
+        return ratingService.addReactionOnEvent(eventId, userId, false);
     }
 
     @GetMapping("/events")

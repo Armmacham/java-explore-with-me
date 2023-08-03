@@ -31,7 +31,7 @@ public class RatingServiceImpl implements RatingService {
     private final RequestRepository requestRepository;
     private final LikeMapper likeMapper;
 
-    public void addReactionOnEvent(Long eventId, Long userId, boolean isLike) {
+    public RatingDto addReactionOnEvent(Long eventId, Long userId, boolean isLike) {
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
 
@@ -46,7 +46,6 @@ public class RatingServiceImpl implements RatingService {
             throw new InvalidStateException("illegal state in request!");
         }
 
-        // if like exists, delete it, else create new like
         likeRepository.getByEventAndUserEntity(event, user)
                 .ifPresentOrElse(e -> {
                     if (e.isValue() == isLike) {
@@ -59,6 +58,9 @@ public class RatingServiceImpl implements RatingService {
                     like.setValue(true);
                     likeRepository.save(like);
                 });
+        return likeRepository.getByEventId(eventId)
+                .map(likeMapper::toDto)
+                .orElseThrow(() -> new InvalidStateException("user not participant of the event!"));
     }
 
     public List<RatingDto> getTopLikesEvents(int from, int size) {

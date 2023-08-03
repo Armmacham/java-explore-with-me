@@ -22,4 +22,14 @@ public interface LikeRepository extends CrudRepository<LikeEntity, Long> {
             "group by le.event " +
             "ORDER BY SUM(CASE WHEN le.value = true THEN 1 ELSE 0 END) DESC")
     Page<EventLikeCount> getTopRatingEvents(Pageable pageable);
+
+    @Query("SELECT " +
+            "new ru.practicum.ewmservice.rating.controller.dto.EventLikeCount(" +
+            "le.event, " +
+            "SUM(CASE WHEN le.value = true THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN le.value = false THEN 1 ELSE 0 END)) FROM LikeEntity le " +
+            "WHERE le.event.id = :eventId " +
+            "group by le.event " +
+            "ORDER BY SUM(CASE WHEN le.value = true THEN 1 ELSE 0 END) DESC")
+    Optional<EventLikeCount> getByEventId(Long eventId);
 }
