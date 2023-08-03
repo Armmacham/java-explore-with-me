@@ -43,11 +43,12 @@ public class StatsServiceImpl implements StatsService {
             return statsRepository.findAllWithoutUriAndNotUnique(start, end)
                     .stream().map(statMapper::toViewStatsResponseDto).collect(Collectors.toList());
         } else {
+            List<String> urisModificated = uris.stream().map(e -> e.replace("[", "").replace("]", "")).collect(Collectors.toList());
             if (unique) {
-                return statsRepository.findAllWithUrisAndUnique(start, end, uris)
+                return statsRepository.findAllWithUrisAndUnique(start, end, urisModificated)
                         .stream().map(statMapper::toViewStatsResponseDto).collect(Collectors.toList());
             }
-            return statsRepository.findAllWithUrisAndNotUnique(start, end, uris)
+            return statsRepository.findAllWithUrisAndNotUnique(start, end, urisModificated)
                     .stream().map(statMapper::toViewStatsResponseDto).collect(Collectors.toList());
         }
     }
