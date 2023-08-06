@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.ewmservice.user.controller.dto.NewUserRequest;
 import ru.practicum.ewmservice.user.controller.dto.UserDto;
@@ -23,12 +24,14 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    @Transactional
     public UserDto addNewUser(NewUserRequest newUserRequest) {
         log.info("add new user {}", newUserRequest);
         return userMapper.toDto(userRepository.save(userMapper.toEntity(newUserRequest)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> getAllUserWithPagination(List<Long> ids, int from, int size) {
         log.info("get all users where id in {} from {} size {}", ids, from, size);
         if (ids == null || ids.isEmpty()) {
@@ -45,6 +48,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public UserEntity getById(Long id) {
         log.info("find user by id {}", id);
         return userRepository.findById(id)
@@ -53,6 +57,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void delete(Long id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("user with id=" + id + " not found"));

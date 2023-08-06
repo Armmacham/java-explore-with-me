@@ -1,10 +1,7 @@
 package ru.practicum.ewmservice.event.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.practicum.ewmservice.location.dto.LocationDto;
 
 import javax.validation.constraints.Min;
@@ -17,6 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class NewEventDto {
     @NotBlank
     @Size(min = 20, max = 2000)

@@ -2,6 +2,7 @@ package ru.practicum.ewmservice.request.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.controller.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewmservice.event.controller.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewmservice.event.dao.EventEntity;
@@ -36,6 +37,7 @@ public class RequestServiceImpl implements RequestService {
     private final EventMapper eventMapper;
 
     @Override
+    @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
@@ -53,6 +55,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getParticipationsList(Long userId, Long eventId) {
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
@@ -66,6 +69,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
         UserEntity user = userService.getById(userId);
         return requestRepository.getRequestsByRequester(user)
@@ -75,6 +79,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         UserEntity user = userService.getById(userId);
         RequestEntity request = requestRepository.findById(requestId)
@@ -87,6 +92,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult changeStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest requests) {
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);

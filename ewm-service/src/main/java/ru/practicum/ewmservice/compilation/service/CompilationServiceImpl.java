@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.compilation.controller.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.controller.dto.NewCompilationDto;
 import ru.practicum.ewmservice.compilation.controller.dto.UpdateCompilationRequest;
@@ -29,6 +30,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationMapper compilationMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
 
         CompilationEntity compilation = compilationRepository.findById(id)
@@ -39,6 +41,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CompilationDto> getCompilation(boolean pinned, int from, int size) {
         List<CompilationEntity> compilations = compilationRepository
                 .getCompilationsByPinned(pinned, PageRequest.of(from / size, size)).stream().collect(Collectors.toList());
@@ -68,6 +71,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public CompilationDto update(Long id, UpdateCompilationRequest compilationRequest) {
         CompilationEntity compilation = compilationRepository.findById(id).orElse(null);
         if (compilation == null) {
@@ -90,6 +94,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         CompilationEntity compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("compilation with id=" + id + " not found"));
@@ -97,6 +102,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public CompilationDto createNewCompilation(NewCompilationDto newCompilationDto) {
         List<EventEntity> events = eventService.getEventListByEventIds(newCompilationDto.getEvents());
         CompilationEntity compilationEntity = compilationMapper.toCompilation(newCompilationDto, events);
