@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(int from, int size) {
-        log.info("get categories from {} size {}", from, size);
+        log.info("Get categories from {} size {}", from, size);
         return categoryRepository.findAll(PageRequest.of(from / size, size))
                 .stream()
                 .map(categoryMapper::toDto)
@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public CategoryDto getById(Long id) {
-        log.info("get category by id {}", id);
+        log.info("Get category by id {}", id);
         return categoryRepository.findById(id)
                 .map(categoryMapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + id + " not found"));
@@ -52,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void deleteCategory(Long id) {
-        log.info("delete category {}", id);
+        log.info("Delete category {}", id);
         CategoryEntity categoryEntity = categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + id + " not found"));
         categoryRepository.delete(categoryEntity);

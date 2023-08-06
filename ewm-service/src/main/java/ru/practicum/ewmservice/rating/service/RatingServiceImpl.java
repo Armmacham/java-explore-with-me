@@ -1,6 +1,7 @@
 package ru.practicum.ewmservice.rating.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 import static ru.practicum.ewmservice.state.RequestState.CONFIRMED;
 import static ru.practicum.ewmservice.state.State.PUBLISHED;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RatingServiceImpl implements RatingService {
@@ -34,6 +36,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Transactional
     public RatingDto addReactionOnEvent(Long eventId, Long userId, boolean isLike) {
+        log.info("Adding reaction on event {} by user {}", eventId, userId);
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
 
@@ -72,6 +75,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Transactional(readOnly = true)
     public List<RatingDto> getTopLikesEvents(int from, int size) {
+        log.info("Getting top events from {}", from);
         return likeRepository.getTopRatingEvents(PageRequest.of(from / size, size))
                 .stream()
                 .map(likeMapper::toDto)

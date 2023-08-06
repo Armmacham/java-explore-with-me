@@ -32,7 +32,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
-
+        log.info("Get compilation by id = {}", id);
         CompilationEntity compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("compilation " + id + " not found"));
 
@@ -43,6 +43,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional(readOnly = true)
     public List<CompilationDto> getCompilation(boolean pinned, int from, int size) {
+        log.info("Get compilations by pages sized = {} form {}", size, from);
         List<CompilationEntity> compilations = compilationRepository
                 .getCompilationsByPinned(pinned, PageRequest.of(from / size, size)).stream().collect(Collectors.toList());
 
@@ -73,6 +74,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto update(Long id, UpdateCompilationRequest compilationRequest) {
+        log.info("Update compilation by id = {}", id);
         CompilationEntity compilation = compilationRepository.findById(id).orElse(null);
         if (compilation == null) {
             log.info("Подборки с id {} не найдено", id);
@@ -96,6 +98,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public void delete(Long id) {
+        log.info("Delete compilation by id = {}", id);
         CompilationEntity compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("compilation with id=" + id + " not found"));
         compilationRepository.delete(compilation);
@@ -104,6 +107,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto createNewCompilation(NewCompilationDto newCompilationDto) {
+        log.info("Creat new compilation");
         List<EventEntity> events = eventService.getEventListByEventIds(newCompilationDto.getEvents());
         CompilationEntity compilationEntity = compilationMapper.toCompilation(newCompilationDto, events);
         CompilationEntity compilationEntityResult = compilationRepository.save(compilationEntity);

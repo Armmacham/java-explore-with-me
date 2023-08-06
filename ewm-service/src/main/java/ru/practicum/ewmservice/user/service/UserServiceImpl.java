@@ -26,14 +26,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto addNewUser(NewUserRequest newUserRequest) {
-        log.info("add new user {}", newUserRequest);
+        log.info("Add new user {}", newUserRequest);
         return userMapper.toDto(userRepository.save(userMapper.toEntity(newUserRequest)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> getAllUserWithPagination(List<Long> ids, int from, int size) {
-        log.info("get all users where id in {} from {} size {}", ids, from, size);
+        log.info("Get all users where id in {} from {} size {}", ids, from, size);
         if (ids == null || ids.isEmpty()) {
             return userRepository.findAll(PageRequest.of(from / size, size))
                     .stream()
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserEntity getById(Long id) {
-        log.info("find user by id {}", id);
+        log.info("Find user by id {}", id);
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("user with id=" + id + " not found"));
     }

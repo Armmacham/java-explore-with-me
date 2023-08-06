@@ -20,7 +20,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public LocationEntity save(LocationDto locationDto) {
-        log.info("save location {}", locationDto);
+        log.info("Save location {}", locationDto);
         return locationRepository.findByLatIsAndLonIs(locationDto.getLat(), locationDto.getLon())
                 .orElse(locationRepository.save(locationMapper.toEntity(locationDto)));
     }
@@ -28,7 +28,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void delete(LocationEntity locationEntity) {
-        log.info("delete location with id {}", locationEntity.getId());
+        log.info("Delete location with id {}", locationEntity.getId());
         locationRepository.delete(locationEntity);
     }
 
