@@ -67,7 +67,6 @@ public class RequestServiceImpl implements RequestService {
                 .map(requestMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long userId) {

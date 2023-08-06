@@ -240,7 +240,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public EventFullDto changeEvent(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         EventEntity oldEvent = getById(eventId);
         if (oldEvent.getState() != State.PENDING) {
@@ -255,7 +255,7 @@ public class EventServiceImpl implements EventService {
         EventEntity resultEvent = update(oldEvent, updateEventAdminRequest);
         resultEvent.setId(eventId);
 
-        return saveChangeEventForAdmin(resultEvent);
+        return context.getBean(EventService.class).saveChangeEventForAdmin(resultEvent);
     }
 
     private EventEntity update(EventEntity event, UpdateEventAdminRequest updateEvent) {
