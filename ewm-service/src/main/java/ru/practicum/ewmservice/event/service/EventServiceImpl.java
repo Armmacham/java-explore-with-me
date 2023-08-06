@@ -2,9 +2,11 @@ package ru.practicum.ewmservice.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.controller.dto.EventFilterDto;
 import ru.practicum.ewmservice.event.controller.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.category.dao.CategoryEntity;
@@ -52,9 +54,9 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final ServiceStatsClient statsClient;
     private final AdminEventRepository adminEventRepository;
-
     private final CategoryMapper categoryMapper;
     private final EventMapper eventMapper;
+    private final ApplicationContext context;
 
     private final String app = "evm-service";
 
@@ -62,7 +64,9 @@ public class EventServiceImpl implements EventService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
+    @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto eventDto) {
+        log.info("Creating event {} by user {}", eventDto, userId);
         UserEntity user = userService.getById(userId);
         if (eventDto.getEventDate() != null && eventDto.getEventDate().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("invalid event date");
@@ -78,7 +82,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventEntity> getEventListByEventIds(List<Long> ids) {
+        log.info("Getting events by id list = {}", ids);
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
@@ -86,20 +92,26 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventEntity getById(Long eventId) {
+        log.info("Getting event by id = {}", eventId);
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("event with id=" + eventId + " not found"));
     }
 
     @Override
+    @Transactional
     public EventFullDto saveChangeEventForAdmin(EventEntity event) {
+        log.info("Saving event {} changes fro admin", event);
         event.setPublishedOn(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         EventEntity resultEven = eventRepository.save(event);
         return eventMapper.toEventFullDto(resultEven, 0L, 0L);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getFullEventById(Long id, String ip) {
+        log.info("Getting full event by id = {}", id);
         EventEntity event = getById(id);
 
         statsClient.hit(new HitRequestDto(app, "/events/" + id, ip, LocalDateTime.now()));
@@ -112,7 +124,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest eventUserRequest) {
+        log.info("Updating event {} by user {} ", eventId, userId);
         userService.getById(userId);
         EventEntity event = getById(eventId);
         if (!Objects.equals(userId, event.getInitiator().getId())) {
@@ -131,7 +145,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto findFullInfoEventByCreator(Long userId, Long eventId) {
+        log.info("Finding full information of event {} by creator id = {}", eventId, userId);
         userService.getById(userId);
         EventEntity event = getById(eventId);
         if (!Objects.equals(userId, event.getInitiator().getId())) {
@@ -142,9 +158,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> findEventsWithParameters(List<Long> users, List<State> states,
                                                        List<Long> categories, LocalDateTime rangeStart,
                                                        LocalDateTime rangeEnd, int from, int size) {
+        log.info("Find events with parameters:" +
+                "users - {}, states - {}, categories - {}, from {} to {}", users, states, categories, rangeStart, rangeEnd);
 
         List<EventEntity> events =
                 adminEventRepository.findEvents(users, states, categories, rangeStart, rangeEnd, from / size, size);
@@ -152,7 +171,8 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> confirmedRequestMap =
                 findEventIdConfirmedCount(events.stream().map(EventEntity::getId).collect(Collectors.toList()));
 
-        Map<Long, Long> viewsMap = getViews(events, events.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
+        Map<Long, Long> viewsMap = context.getBean(EventService.class)
+                .getViews(events, events.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
 
         return events
                 .stream()
@@ -163,14 +183,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> findEventsByCurrentUser(Long userId, int from, int size) {
+        log.info("Finding all events by current user {}", userId);
         userService.getById(userId);
 
         Page<EventEntity> userEvents = eventRepository.findAllUserEvents(userId, PageRequest.of(from / size, size));
 
         Map<Long, Long> confirmedRequestMap = findEventIdConfirmedCount(
                 userEvents.stream().map(EventEntity::getId).collect(Collectors.toList()));
-        Map<Long, Long> viewsMap = getViews(
+        Map<Long, Long> viewsMap = context.getBean(EventService.class).getViews(
                 userEvents.toList(),
                 userEvents.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
 
@@ -183,10 +205,14 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> findPublicEventsWithParameters(String text, List<Long> categories,
                                                               Boolean paid, String rangeStart, String rangeEnd,
                                                               Boolean onlyAvailable, SortState sort, int from,
                                                               int size, String ip) {
+        log.info("Find public events with parameters:" +
+                "text - {}, categories - {}, paid - {}, from {} to {}", text, categories, paid, rangeStart, rangeEnd);
         checkRanges(rangeStart, rangeEnd);
 
         statsClient.hit(new HitRequestDto(app, "/events", ip, LocalDateTime.now()));
@@ -196,7 +222,7 @@ public class EventServiceImpl implements EventService {
         }
         List<EventEntity> events = adminEventRepository.findPublicEventsWithParameters(text, categories, paid, rangeStart,
                 rangeEnd, sort, from, size);
-        List<EventShortDto> eventsShortDto = getEventShortListWithSort(events, onlyAvailable);
+        List<EventShortDto> eventsShortDto = context.getBean(EventService.class).getEventShortListWithSort(events, onlyAvailable);
 
         if (sort != null && sort.equals(SortState.VIEWS)) {
             return eventsShortDto.stream()
@@ -208,7 +234,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<EventFullDto> findEvents(EventFilterDto eventFilterDto) {
+        log.info("Getting event within time period {} - {} ", eventFilterDto.getRangeStart(), eventFilterDto.getRangeEnd());
         LocalDateTime startFormat = null;
         LocalDateTime endFormat = null;
 
@@ -224,7 +252,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto changeEvent(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
+        log.info("Changing event {} by admin", eventId);
         EventEntity oldEvent = getById(eventId);
         if (oldEvent.getState() != State.PENDING) {
             throw new InvalidStateException("unable to change event status");
@@ -238,7 +268,7 @@ public class EventServiceImpl implements EventService {
         EventEntity resultEvent = update(oldEvent, updateEventAdminRequest);
         resultEvent.setId(eventId);
 
-        return saveChangeEventForAdmin(resultEvent);
+        return context.getBean(EventService.class).saveChangeEventForAdmin(resultEvent);
     }
 
     private EventEntity update(EventEntity event, UpdateEventAdminRequest updateEvent) {
@@ -341,15 +371,19 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getEventShortListWithSort(List<EventEntity> events, Boolean onlyAvailable) {
-        Map<Long, Long> viewsMap = getViews(events, events.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
+        log.info("Getting events (available = {})", onlyAvailable);
+        Map<Long, Long> viewsMap = context.getBean(EventService.class).getViews(events, events.stream().map(e -> "/events/" + e.getId()).collect(Collectors.toList()));
         Map<Long, Long> confirmedRequestMap = findEventIdConfirmedCount(events.stream().map(EventEntity::getId).collect(Collectors.toList()));
 
-        return getEventShortListWithSort(events, onlyAvailable, viewsMap, confirmedRequestMap);
+        return context.getBean(EventService.class).getEventShortListWithSort(events, onlyAvailable, viewsMap, confirmedRequestMap);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getEventShortListWithSort(List<EventEntity> events, Boolean onlyAvailable, Map<Long, Long> viewsMap, Map<Long, Long> confirmedRequestMap) {
+        log.info("Getting events (available = {})", onlyAvailable);
         if (onlyAvailable) {
             return events
                     .stream()
@@ -364,7 +398,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Long> findEventIdConfirmedCount(List<Long> eventIds) {
+        log.info("Getting events with confirmed request size");
         Collection<EventWithRequestNum> resultConfirmedReq = eventRepository
                 .getConfirmedRequestMap(eventIds, RequestState.CONFIRMED);
 
@@ -374,7 +410,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Long> getViews(List<EventEntity> events, List<String> uris) {
+        log.info("Getting views of events {}", events);
         LocalDateTime startTime = getStartTimeForStatistic(events).minusMinutes(10);
         Map<Long, Long> resultViewsMap = new HashMap<>();
         Collection<ViewStatsResponseDto> stats = statsClient.showStats(startTime, LocalDateTime.now().plusMinutes(1)

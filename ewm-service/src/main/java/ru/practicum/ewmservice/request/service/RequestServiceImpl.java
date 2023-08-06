@@ -1,7 +1,9 @@
 package ru.practicum.ewmservice.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.controller.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewmservice.event.controller.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewmservice.event.dao.EventEntity;
@@ -25,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class RequestServiceImpl implements RequestService {
@@ -36,7 +39,9 @@ public class RequestServiceImpl implements RequestService {
     private final EventMapper eventMapper;
 
     @Override
+    @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
+        log.info("Creating request by user {} on event {}", eventId, eventId);
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
         checkRequest(user, event);
@@ -53,7 +58,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getParticipationsList(Long userId, Long eventId) {
+        log.info("Getting participations to event {}", eventId);
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
         if (!user.getId().equals(event.getInitiator().getId())) {
@@ -66,7 +73,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
+        log.info("Getting requests by user {}", userId);
         UserEntity user = userService.getById(userId);
         return requestRepository.getRequestsByRequester(user)
                 .stream()
@@ -75,7 +84,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
+        log.info("Canceling request {} by user {}", requestId, userId);
         UserEntity user = userService.getById(userId);
         RequestEntity request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("request with id=" + requestId + " not found"));
@@ -87,7 +98,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult changeStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest requests) {
+        log.info("Changing status of request {} status by user {}", eventId, userId);
         UserEntity user = userService.getById(userId);
         EventEntity event = eventService.getById(eventId);
         if (!user.getId().equals(event.getInitiator().getId())) {
@@ -135,7 +148,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private EventRequestStatusUpdateResult rejectAll(List<RequestEntity> allRequests) {
-        allRequests.forEach(request -> request.setStatus(RequestState.REJECTED));
+        allRequests.forEach(request -> {
+            request.setStatus(RequestState.REJECTED);
+        });
         requestRepository.saveAll(allRequests);
         return eventMapper.toEventRequestStatusUpdateResult(new ArrayList<>(), allRequests);
     }

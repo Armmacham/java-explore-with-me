@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.category.dao.CategoryEntity;
 import ru.practicum.ewmservice.category.controller.dto.AddCategoryRequestDto;
 import ru.practicum.ewmservice.category.controller.dto.CategoryDto;
@@ -23,14 +24,16 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     @Override
+    @Transactional
     public CategoryDto createNewCategory(AddCategoryRequestDto addCategoryRequestDto) {
         log.info("Add new category {}", addCategoryRequestDto);
         return categoryMapper.toDto(categoryRepository.save(categoryMapper.toEntity(addCategoryRequestDto)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(int from, int size) {
-        log.info("get categories from {} size {}", from, size);
+        log.info("Get categories from {} size {}", from, size);
         return categoryRepository.findAll(PageRequest.of(from / size, size))
                 .stream()
                 .map(categoryMapper::toDto)
@@ -38,22 +41,25 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryDto getById(Long id) {
-        log.info("get category by id {}", id);
+        log.info("Get category by id {}", id);
         return categoryRepository.findById(id)
                 .map(categoryMapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + id + " not found"));
     }
 
     @Override
+    @Transactional
     public void deleteCategory(Long id) {
-        log.info("delete category {}", id);
+        log.info("Delete category {}", id);
         CategoryEntity categoryEntity = categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + id + " not found"));
         categoryRepository.delete(categoryEntity);
     }
 
     @Override
+    @Transactional
     public CategoryDto changeCategory(Long id, AddCategoryRequestDto addCategoryRequestDto) {
         log.info("Change category with id {}", id);
         CategoryEntity categoryEntity = categoryRepository.findById(id)
